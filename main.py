@@ -34,6 +34,10 @@ def main():
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
 
+    # Hide from Dock — run as a menu bar agent only
+    from AppKit import NSApplication, NSApplicationActivationPolicyAccessory
+    NSApplication.sharedApplication().setActivationPolicy_(NSApplicationActivationPolicyAccessory)
+
     popup = PopupWindow()
 
     # Clipboard monitor
