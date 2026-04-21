@@ -42,8 +42,9 @@ def _atomic_write(path: str, data, **json_kwargs):
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(data, f, **json_kwargs)
-        os.replace(tmp, path)          # atomic on POSIX
-        os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)  # 600 — owner only
+        os.replace(tmp, path)          # atomic on POSIX / Windows
+        if os.name != "nt":            # chmod is a no-op on Windows
+            os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)  # 600 — owner only
     except Exception:
         try:
             os.unlink(tmp)

@@ -34,9 +34,10 @@ def main():
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
 
-    # Hide from Dock — run as a menu bar agent only
-    from AppKit import NSApplication, NSApplicationActivationPolicyAccessory
-    NSApplication.sharedApplication().setActivationPolicy_(NSApplicationActivationPolicyAccessory)
+    # Hide from Dock — run as a menu bar agent only (macOS)
+    if sys.platform == "darwin":
+        from AppKit import NSApplication, NSApplicationActivationPolicyAccessory
+        NSApplication.sharedApplication().setActivationPolicy_(NSApplicationActivationPolicyAccessory)
 
     popup = PopupWindow()
 
@@ -50,7 +51,8 @@ def main():
     hotkey.activated.connect(lambda: _toggle(tray, popup))
 
     settings = data_module.load_settings()
-    hk_str = settings.get("hotkey", "<cmd>+<shift>+l")
+    default_hk = "<cmd>+<shift>+l" if sys.platform == "darwin" else "<ctrl>+<shift>+l"
+    hk_str = settings.get("hotkey", default_hk)
     hotkey.start(hk_str)
 
     # Reconnect hotkey when user changes it in Settings

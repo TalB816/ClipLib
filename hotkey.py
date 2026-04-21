@@ -1,14 +1,25 @@
+import sys
 from PyQt6.QtCore import QObject, pyqtSignal
 
-# (display label, pynput hotkey string)
-HOTKEY_OPTIONS = [
-    ("None", ""),
-    ("⌘⇧L", "<cmd>+<shift>+l"),
-    ("⌘⇧Space", "<cmd>+<shift>+<space>"),
-    ("⌘⌥C", "<cmd>+<alt>+c"),
-    ("⌘⌥V", "<cmd>+<alt>+v"),
-    ("⌘⌥L", "<cmd>+<alt>+l"),
-]
+# Platform-appropriate hotkey presets: (display label, pynput hotkey string)
+if sys.platform == "darwin":
+    HOTKEY_OPTIONS = [
+        ("None",      ""),
+        ("⌘⇧L",      "<cmd>+<shift>+l"),
+        ("⌘⇧Space",  "<cmd>+<shift>+<space>"),
+        ("⌘⌥C",      "<cmd>+<alt>+c"),
+        ("⌘⌥V",      "<cmd>+<alt>+v"),
+        ("⌘⌥L",      "<cmd>+<alt>+l"),
+    ]
+else:  # Windows / Linux
+    HOTKEY_OPTIONS = [
+        ("None",          ""),
+        ("Ctrl+Shift+L",  "<ctrl>+<shift>+l"),
+        ("Ctrl+Shift+Space", "<ctrl>+<shift>+<space>"),
+        ("Ctrl+Alt+C",    "<ctrl>+<alt>+c"),
+        ("Ctrl+Alt+V",    "<ctrl>+<alt>+v"),
+        ("Ctrl+Alt+L",    "<ctrl>+<alt>+l"),
+    ]
 
 
 class GlobalHotkey(QObject):
