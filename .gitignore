@@ -1,0 +1,10 @@
+# User data — not committed
+library.json
+history.json
+settings.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.DS_Store
