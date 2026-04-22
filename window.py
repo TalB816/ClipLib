@@ -162,7 +162,8 @@ MAX_HISTORY_OPTIONS = [
 
 class LibraryTree(QTreeWidget):
     reordered = pyqtSignal()
-    snippet_moved = pyqtSignal(object, str)  # (item_user_data, target_cat_id)
+    snippet_moved = pyqtSignal(object, str)       # (item_user_data, target_cat_id)
+    snippet_reordered = pyqtSignal(object, str, int)  # (item_user_data, cat_id, target_index)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -191,10 +192,16 @@ class LibraryTree(QTreeWidget):
 
     def dragMoveEvent(self, event):
         if self._drag_source_data and self._drag_source_data[0] == "item":
-            # Snippets: only accept drops that land on (or inside) a category
-            cat = self._cat_node_at(event.position().toPoint())
-            if cat is not None:
-                self.setCurrentItem(cat)   # highlight the target category
+            target = self.itemAt(event.position().toPoint())
+            if target is None:
+                event.ignore()
+                return
+            d = target.data(0, Qt.ItemDataRole.UserRole)
+            if d and d[0] == "cat":
+                self.setCurrentItem(target)
+                event.accept()
+            elif d and d[0] == "item":
+                self.setCurrentItem(target)
                 event.accept()
             else:
                 event.ignore()
@@ -206,12 +213,22 @@ class LibraryTree(QTreeWidget):
         self._drag_source_data = None
 
         if source_data and source_data[0] == "item":
-            cat = self._cat_node_at(event.position().toPoint())
-            if cat is not None:
-                cat_d = cat.data(0, Qt.ItemDataRole.UserRole)
-                if cat_d:
-                    self.snippet_moved.emit(source_data, cat_d[1])
+            target = self.itemAt(event.position().toPoint())
+            if target is not None:
+                d = target.data(0, Qt.ItemDataRole.UserRole)
+                if d and d[0] == "cat":
+                    self.snippet_moved.emit(source_data, d[1])
                     event.accept()
+                elif d and d[0] == "item":
+                    parent = target.parent()
+                    if parent:
+                        target_index = parent.indexOfChild(target)
+                        self.snippet_reordered.emit(source_data, d[1], target_index)
+                        event.accept()
+                    else:
+                        event.ignore()
+                else:
+                    event.ignore()
             else:
                 event.ignore()
             return  # never call super() for snippet drops
@@ -342,6 +359,7 @@ class PopupWindow(QWidget):
         self._tree.customContextMenuRequested.connect(self._tree_context_menu)
         self._tree.reordered.connect(self._on_tree_reordered)
         self._tree.snippet_moved.connect(self._on_snippet_moved)
+        self._tree.snippet_reordered.connect(self._on_snippet_reordered)
         splitter.addWidget(self._tree)
 
         preview_container = QWidget()
@@ -635,6 +653,31 @@ class PopupWindow(QWidget):
         self._populate_tree(self._search.text().strip())
         self._refresh_recent()
 
+    def _on_snippet_reordered(self, item_data, target_cat_id, target_index):
+        """Snippet dropped onto another snippet — reorder (or move with position)."""
+        old_cat_id = item_data[1]
+        item_id = item_data[2]
+
+        item_obj = None
+        for cat in self._data["categories"]:
+            if cat["id"] == old_cat_id:
+                item_obj = next((i for i in cat["items"] if i["id"] == item_id), None)
+                if item_obj:
+                    cat["items"] = [i for i in cat["items"] if i["id"] != item_id]
+                break
+
+        if item_obj is None:
+            return
+
+        for cat in self._data["categories"]:
+            if cat["id"] == target_cat_id:
+                cat["items"].insert(min(target_index, len(cat["items"])), item_obj)
+                break
+
+        data_module.save(self._data)
+        self._populate_tree(self._search.text().strip())
+        self._refresh_recent()
+
     def _on_tree_reordered(self):
         new_order = []
         for i in range(self._tree.topLevelItemCount()):
@@ -694,6 +737,7 @@ class PopupWindow(QWidget):
         item = self._tree.itemAt(pos)
         if not item:
             return
+        self._tree.setCurrentItem(item)  # ensure right-clicked item is selected
         d = item.data(0, Qt.ItemDataRole.UserRole)
         menu = QMenu(self)
         menu.setStyleSheet("""
