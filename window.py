@@ -418,6 +418,7 @@ class PopupWindow(QWidget):
 
         self._hist_list = QListWidget()
         self._hist_list.itemDoubleClicked.connect(self._copy_history_item)
+        self._hist_list.itemClicked.connect(lambda _: self._delete_history_item())
         layout.addWidget(self._hist_list)
 
         toolbar = QHBoxLayout()
