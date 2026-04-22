@@ -82,7 +82,16 @@ def main():
     quit_menu.addAction("Quit ClipLib", app.quit)
 
     def _on_tray_activated(reason):
-        if reason == QSystemTrayIcon.ActivationReason.Trigger:
+        # On macOS the first click on a menu bar icon can arrive as Unknown
+        # (the OS uses it to activate the process). Force activation here so
+        # every click — regardless of reason — brings the app forward first.
+        if sys.platform == "darwin":
+            try:
+                NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
+            except Exception:
+                pass
+        if reason in (QSystemTrayIcon.ActivationReason.Trigger,
+                      QSystemTrayIcon.ActivationReason.Unknown):
             _toggle(tray, popup)
         elif reason == QSystemTrayIcon.ActivationReason.Context:
             quit_menu.popup(tray.geometry().bottomLeft())

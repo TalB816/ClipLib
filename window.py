@@ -992,15 +992,6 @@ class PopupWindow(QWidget):
     # -------------------------------------------------------------------------
 
     def show_near_tray(self, tray_geometry):
-        # On macOS accessory apps the first tray click activates the process but
-        # doesn't fire Trigger — force activation so every click works.
-        if sys.platform == "darwin":
-            try:
-                from AppKit import NSApplication
-                NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
-            except Exception:
-                pass
-
         screen = QApplication.primaryScreen().availableGeometry()
         if tray_geometry.isNull() or (tray_geometry.x() == 0 and tray_geometry.y() == 0):
             x = screen.right() - self.width() - 10
