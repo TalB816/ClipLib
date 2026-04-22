@@ -63,6 +63,7 @@ class CategoryDialog(QDialog):
         layout.addWidget(QLabel("Category name"))
         self.name_input = QLineEdit(name)
         self.name_input.setPlaceholderText("e.g. SQL Queries")
+        self.name_input.returnPressed.connect(self.accept)
         layout.addWidget(self.name_input)
 
         buttons = QHBoxLayout()
