@@ -29,26 +29,43 @@ A lightweight menu bar app for macOS and Windows that combines a personal snippe
 - Configurable clipboard history limit
 - Clear history before a specific date
 
-## Requirements
+## Installation
 
-- Python 3.9+
-- PyQt6
-- pynput
-- pyobjc (macOS only)
-
-Install dependencies:
+### macOS
 
 ```bash
-pip install PyQt6 pynput pyobjc
+git clone https://github.com/TalB816/ClipLib.git
+cd ClipLib
+./install.sh
 ```
 
-> On Windows, omit `pyobjc`.
+The script checks your Python version, installs all required packages, and offers to launch the app.
+
+> **Note:** The global hotkey requires Accessibility access. If prompted, go to **System Settings → Privacy & Security → Accessibility** and enable your Terminal or Python.
+
+### Windows
+
+```
+git clone https://github.com/TalB816/ClipLib.git
+cd ClipLib
+install.bat
+```
+
+Or double-click `install.bat` in File Explorer.
+
+> Python 3.9+ must be installed and added to PATH. Get it at [python.org](https://www.python.org/downloads/) — check "Add Python to PATH" during installation.
+
+### Manual install
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Running the App
 
 ```bash
-# macOS — run as background process
-nohup python3 -u ~/ClipLib/main.py &
+# macOS
+nohup python3 main.py &
 
 # Windows
 pythonw main.py
@@ -57,6 +74,7 @@ pythonw main.py
 To stop the app:
 
 ```bash
+# macOS
 pkill -f "Python.*main.py"
 ```
 
