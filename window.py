@@ -432,6 +432,10 @@ class PopupWindow(QWidget):
             b.clicked.connect(slot)
             toolbar.addWidget(b)
         toolbar.addStretch()
+        btn_delete = QPushButton("Delete")
+        btn_delete.setObjectName("danger")
+        btn_delete.clicked.connect(self._delete_history_item)
+        toolbar.addWidget(btn_delete)
         btn_clear = QPushButton("Clear all")
         btn_clear.setObjectName("danger")
         btn_clear.clicked.connect(self._clear_history)
@@ -907,6 +911,14 @@ class PopupWindow(QWidget):
             self._populate_tree(self._search.text().strip())
             self._refresh_recent()
 
+    def _delete_history_item(self):
+        h = self._current_history_item()
+        if not h:
+            return
+        self._history = [x for x in self._history if x is not h]
+        data_module.save_history(self._history)
+        self._refresh_history(self._search.text().strip())
+
     def _clear_history(self):
         self._history.clear()
         data_module.save_history(self._history)
@@ -1020,4 +1032,7 @@ class PopupWindow(QWidget):
                     if d and d[0] == "item":
                         self._copy_text(d[3], cat_id=d[1], item_id=d[2])
                         self.hide()
+        elif event.key() == Qt.Key.Key_Delete:
+            if self._tabs.currentIndex() == 1:
+                self._delete_history_item()
         super().keyPressEvent(event)
