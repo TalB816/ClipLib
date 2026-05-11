@@ -332,7 +332,7 @@ class PopupWindow(QWidget):
         layout.setSpacing(4)
 
         # Recently used section
-        self._recent_header = QPushButton("▾  Recently Used")
+        self._recent_header = QPushButton("▸  Recently Used")
         self._recent_header.setObjectName("section_header")
         self._recent_header.clicked.connect(self._toggle_recent)
         layout.addWidget(self._recent_header)
@@ -341,6 +341,7 @@ class PopupWindow(QWidget):
         self._recent_list.setMaximumHeight(90)
         self._recent_list.setObjectName("recentList")
         self._recent_list.itemDoubleClicked.connect(self._copy_recent_item)
+        self._recent_list.setVisible(False)
         layout.addWidget(self._recent_list)
 
         # Splitter: tree / preview
@@ -418,7 +419,6 @@ class PopupWindow(QWidget):
 
         self._hist_list = QListWidget()
         self._hist_list.itemDoubleClicked.connect(self._copy_history_item)
-        self._hist_list.itemClicked.connect(lambda _: self._delete_history_item())
         layout.addWidget(self._hist_list)
 
         toolbar = QHBoxLayout()
@@ -426,7 +426,7 @@ class PopupWindow(QWidget):
         for text, slot, obj in [
             ("Copy",            self._copy_history_item,       "action"),
             ("📌 Pin",          self._pin_history_item,        "action"),
-            ("Save to Library", self._save_history_to_library, "action"),
+            ("Save",            self._save_history_to_library, "action"),
         ]:
             b = QPushButton(text)
             b.setObjectName(obj)
@@ -1005,7 +1005,8 @@ class PopupWindow(QWidget):
     # -------------------------------------------------------------------------
 
     def show_near_tray(self, tray_geometry):
-        screen = QApplication.primaryScreen().availableGeometry()
+        screen_obj = QApplication.screenAt(tray_geometry.center()) or QApplication.primaryScreen()
+        screen = screen_obj.availableGeometry()
         if tray_geometry.isNull() or (tray_geometry.x() == 0 and tray_geometry.y() == 0):
             x = screen.right() - self.width() - 10
             y = screen.top() + 28
