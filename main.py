@@ -81,10 +81,17 @@ def main():
     """)
     quit_menu.addAction("Quit ClipLib", app.quit)
 
+    # On macOS a single tray click fires activated() twice: Unknown (OS process-
+    # activation event) then Trigger. Without debouncing, _toggle runs twice and
+    # the window shows then immediately hides. A 50ms one-shot timer collapses
+    # both signals into a single toggle.
+    from PyQt6.QtCore import QTimer as _QTimer
+    _toggle_debounce = _QTimer()
+    _toggle_debounce.setSingleShot(True)
+    _toggle_debounce.setInterval(50)
+    _toggle_debounce.timeout.connect(lambda: _toggle(tray, popup))
+
     def _on_tray_activated(reason):
-        # On macOS the first click on a menu bar icon can arrive as Unknown
-        # (the OS uses it to activate the process). Force activation here so
-        # every click — regardless of reason — brings the app forward first.
         if sys.platform == "darwin":
             try:
                 NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
@@ -92,7 +99,8 @@ def main():
                 pass
         if reason in (QSystemTrayIcon.ActivationReason.Trigger,
                       QSystemTrayIcon.ActivationReason.Unknown):
-            _toggle(tray, popup)
+            if not _toggle_debounce.isActive():
+                _toggle_debounce.start()
         elif reason == QSystemTrayIcon.ActivationReason.Context:
             quit_menu.popup(tray.geometry().bottomLeft())
 
